@@ -1,5 +1,7 @@
 import pytest
+from financeiro.categoria import Categoria
 from financeiro.conta import Conta
+from financeiro.lancamento import Lancamento
 
 
 class TestConta:
@@ -34,3 +36,17 @@ class TestConta:
     def test_sacar_com_saldo_insuficiente(self):
         with pytest.raises(ValueError):
             self.conta.sacar(5000.0)
+
+    def test_registrar_lancamento_altera_o_saldo(self):
+        categoria = Categoria("Alimentacao")
+        self.conta.registrar_lancamento(Lancamento("Mercado", -300.0, "2026-08-05", categoria))
+        assert self.conta.saldo == 700.0
+
+    def test_registrar_lancamento_que_estoura_o_saldo_falha(self):
+        categoria = Categoria("Alimentacao")
+        with pytest.raises(ValueError):
+            self.conta.registrar_lancamento(Lancamento("Carro", -5000.0, "2026-08-05", categoria))
+
+    def test_saldo_nao_pode_ser_alterado_de_fora(self):
+        with pytest.raises(AttributeError):
+            self.conta.saldo = 99999

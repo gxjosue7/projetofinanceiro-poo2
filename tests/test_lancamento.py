@@ -1,3 +1,4 @@
+import pytest
 from financeiro.categoria import Categoria
 from financeiro.lancamento import Lancamento
 
@@ -13,3 +14,7 @@ class TestLancamento:
         assert lancamento.valor == -150.0
         assert lancamento.data == "2026-08-01"
         assert lancamento.categoria is self.categoria
+
+    def test_valor_zero_lanca_erro(self):
+        with pytest.raises(ValueError):
+            Lancamento("Mercado", 0, "2026-08-01", self.categoria)

@@ -5,7 +5,7 @@ class Conciliacao:
         self._creditos = list(creditos)
 
     def total_debitos(self):
-        return sum(l.valor for l in self._debitos)
+        return sum(-l.valor for l in self._debitos)
 
     def total_creditos(self):
         return sum(l.valor for l in self._creditos)

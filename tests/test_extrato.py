@@ -26,7 +26,7 @@ class TestExtrato:
         assert extrato.saldo_final() == 0.0
 
     def test_extrato_sem_conciliacao_pendente(self):
-        debitos = [Lancamento("Saida", 500.0, "2026-08-01", self.categoria)]
+        debitos = [Lancamento("Saida", -500.0, "2026-08-01", self.categoria)]
         creditos = [Lancamento("Entrada", 500.0, "2026-08-01", self.categoria)]
         conciliacao = Conciliacao(debitos, creditos)
         extrato = Extrato("Agosto/2026", [], [conciliacao])

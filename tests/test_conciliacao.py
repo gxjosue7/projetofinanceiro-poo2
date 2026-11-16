@@ -10,7 +10,7 @@ class TestConciliacao:
         self.categoria = Categoria("Transferencia")
 
     def test_conciliacao_bate(self):
-        debitos = [Lancamento("Saida", 500.0, "2026-08-01", self.categoria)]
+        debitos = [Lancamento("Saida", -500.0, "2026-08-01", self.categoria)]
         creditos = [Lancamento("Entrada", 500.0, "2026-08-01", self.categoria)]
         conciliacao = Conciliacao(debitos, creditos)
         assert conciliacao.esta_conciliada() is True

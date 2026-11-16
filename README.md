@@ -40,3 +40,39 @@ source .venv/bin/activate
 pip install -r requirements.txt
 pytest -v
 ```
+
+## Ajustes após o feedback
+
+A `Conta` agora guarda a lista de lançamentos e calcula o `saldo` a partir do saldo inicial somado aos lançamentos, em vez de guardar um número solto. O `saldo` é somente leitura. `depositar` e `sacar` passaram a registrar lançamentos, então o saldo nunca fica fora de sincronia. A regra de saldo insuficiente passou para `registrar_lancamento`. O `Lancamento` recusa valor zero. A `Conciliacao` passou a inverter o sinal dos débitos, que são negativos pela convenção deste projeto.
+
+## Estratégias
+
+`EstrategiaRendimento` (poupança e CDB pré-fixado), `EstrategiaJuros` (simples e compostos) e `EstrategiaCorrecao` (IPCA e Selic) seguem o padrão Strategy. A `Aplicacao` usa a estratégia de rendimento.
+
+**Rendimento, juros e correção monetária são interfaces separadas ou a mesma reaproveitada? Por quê?**
+
+Separadas. Cada uma responde uma pergunta diferente e recebe entradas diferentes: o rendimento recebe só o valor aplicado, os juros recebem capital, taxa e meses, e a correção recebe o valor e os meses. Juntar tudo em uma interface obrigaria parâmetros que algumas implementações não usam. Reaproveitar uma interface só faz sentido quando o comportamento é realmente o mesmo, como o Cupom reaproveitando a estratégia de desconto.
+
+**Onde a estratégia escolhida é guardada?**
+
+A `Aplicacao` guarda a estratégia de rendimento como atributo, porque a regra de um investimento é combinada na contratação e não muda depois, como o Cupom guardado no Pedido. Juros e correção não têm uma entidade que as guarde ainda: quem chama passa os valores e a estratégia é usada direto.
+
+**Que novo tipo de regra eu conseguiria adicionar hoje sem editar nenhuma classe existente?**
+
+Um novo investimento (por exemplo uma LCI) é uma nova classe que implementa `EstrategiaRendimento`. Do mesmo jeito, um novo tipo de juros ou de correção é uma nova classe. Nenhuma classe existente muda (Open/Closed).
+
+## Criação de objetos e injeção de dependências
+
+Os leitores (`LeitorCsv`, `LeitorJson`), importadores por banco (`ImportadorBancoAlfa`, `ImportadorBancoBeta`) e exportadores de relatório (`ExportadorCsv`, `ExportadorHtml`) são criados por factories. O `ServicoImportacao` lê o arquivo, registra os lançamentos na conta, monta o extrato e exporta o relatório. A montagem está em `composicao.py`.
+
+**Em cada caso (leitor, importador, exportador), Simple Factory ou Factory Method? O que fez escolher?**
+
+Leitor: Simple Factory (`CriadorLeitor`), porque a escolha depende de um dado simples, a extensão do arquivo. Importador: Simple Factory (`CriadorImportador`), porque a escolha depende de um dado, o banco de origem (enum `Banco`). Exportador: Factory Method, porque `ExportadorRelatorio.exportar` descreve o fluxo comum do relatório e cada subclasse decide qual documento criar em `criar_documento`, já que cada formato monta o documento de um jeito diferente.
+
+**Nos serviços, o que é injetado e o que ainda é criado internamente?**
+
+O `ServicoImportacao` recebe o `CriadorImportador` e o exportador pelo construtor. O `CriadorImportador` e os importadores recebem o `CriadorLeitor`. Ainda são criados internamente o `Fechamento` e o `Extrato` dentro do serviço, porque são objetos do domínio feitos para aquela operação e não precisam ser trocados, e os documentos, criados pelo próprio exportador.
+
+**Onde está a raiz de composição? Que colaborador seria substituível hoje sem editar nenhum serviço?**
+
+Em `financeiro/composicao.py`, na função `montar_servico_importacao`, único lugar que cria as peças reais. Dá para trocar o exportador (CSV por HTML) mudando só o parâmetro, e os testes de `test_servico_importacao.py` substituem o criador de importadores e o exportador por dublês sem editar o serviço.

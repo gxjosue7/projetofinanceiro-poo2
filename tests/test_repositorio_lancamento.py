@@ -5,12 +5,6 @@ from financeiro.repositorio_lancamento import (
     LancamentoNaoEncontradoError,
     RepositorioLancamento,
 )
-from financeiro.repositorio_lancamento_memoria import RepositorioLancamentoMemoria
-
-
-@pytest.fixture
-def repositorio():
-    return RepositorioLancamentoMemoria()
 
 
 def _lancamento(categoria="Alimentacao"):

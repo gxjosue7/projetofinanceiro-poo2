@@ -3,6 +3,7 @@ from financeiro.criador_importador import Banco
 from financeiro.importador import Importador
 from financeiro.categoria import Categoria
 from financeiro.lancamento import Lancamento
+from financeiro.repositorio_lancamento_memoria import RepositorioLancamentoMemoria
 from financeiro.servico_importacao import ServicoImportacao
 
 
@@ -34,9 +35,11 @@ class TestServicoImportacao:
 
     def test_importa_registra_na_conta_e_exporta(self):
         exportador = ExportadorEspiao()
-        servico = ServicoImportacao(CriadorImportadorFalso(), exportador)
+        repositorio = RepositorioLancamentoMemoria()
+        servico = ServicoImportacao(CriadorImportadorFalso(), exportador, repositorio)
         conta = Conta("Corrente", 1000.0)
         extrato = servico.importar_e_exportar(Banco.ALFA, "qualquer.csv", conta, "2026-08", "saida.csv")
         assert conta.saldo == 3700.0
         assert exportador.extratos == [extrato]
         assert extrato.saldo_final() == 2700.0
+        assert len(repositorio.listar()) == 2
